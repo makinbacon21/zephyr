@@ -22,4 +22,10 @@ config RISCV_HAS_PLIC
 config 2ND_LVL_INTR_00_OFFSET
 	default 11
 
+config MULTI_LEVEL_INTERRUPTS
+	default y
+
+config 2ND_LEVEL_INTERRUPTS
+	default y
+
 endif # SOC_SERIES_CV181X

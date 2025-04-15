@@ -1,0 +1,21 @@
+/*
+ * Copyright (c) 2024 Chen Xingyu <hi@xingrz.me>
+ * Copyright (c) 2025 Thomas Makin <halorocker89@gmail.com>
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+&pinctrl {
+	uart2_default: uart2_default {
+		group1 {
+			pinmux = <CVI_PINMUX(UART2_RX, UART2_RX)>,  /* GP0 */
+				 <CVI_PINMUX(UART2_TX, UART2_TX)>;  /* GP1 */
+		};
+	};
+
+	i2c4_default: i2c4_default {
+		group1 {
+			pinmux = <CVI_PINMUX(PWR_WAKEUP0, IIC4_SCL)>,
+				<CVI_PINMUX(PWR_BUTTON1, IIC4_SDA)>;
+		};
+	};
+};
