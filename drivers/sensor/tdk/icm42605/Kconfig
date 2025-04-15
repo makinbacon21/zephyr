@@ -6,8 +6,7 @@
 menuconfig ICM42605
 	bool "ICM42605 Six-Axis Motion Tracking Device"
 	default y
-	depends on DT_HAS_INVENSENSE_ICM42605_ENABLED
-	select SPI
+	depends on DT_HAS_INVENSENSE_ICM42605_SPI_ENABLED || DT_HAS_INVENSENSE_ICM42605_I2C_ENABLED
 	help
 	  Enable driver for ICM42605 SPI-based six-axis motion tracking device.
 
@@ -29,6 +28,21 @@ config ICM42605_TRIGGER_GLOBAL_THREAD
 	select ICM42605_TRIGGER
 
 endchoice
+
+config ICM42605_I2C
+	bool "I2C Bus"
+	default false
+	select I2C
+	help
+	  blah
+
+config ICM42605_SPI
+	bool "SPI Bus"
+	depends on !ICM42605_I2C
+	select SPI
+	default true
+	help
+	  blah
 
 config ICM42605_TRIGGER
 	bool

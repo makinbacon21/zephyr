@@ -10,7 +10,7 @@
 
 LOG_MODULE_DECLARE(ICM42605, CONFIG_SENSOR_LOG_LEVEL);
 
-int inv_spi_single_write(const struct spi_dt_spec *bus, uint8_t reg, uint8_t *data)
+int inv_single_write(const struct spi_dt_spec *spec, uint8_t reg, uint8_t *data)
 {
 	int result;
 
@@ -29,7 +29,7 @@ int inv_spi_single_write(const struct spi_dt_spec *bus, uint8_t reg, uint8_t *da
 		.count = 2,
 	};
 
-	result = spi_write_dt(bus, &tx);
+	result = spi_write_dt(spec, &tx);
 
 	if (result) {
 		return result;
@@ -38,7 +38,7 @@ int inv_spi_single_write(const struct spi_dt_spec *bus, uint8_t reg, uint8_t *da
 	return 0;
 }
 
-int inv_spi_read(const struct spi_dt_spec *bus, uint8_t reg, uint8_t *data, size_t len)
+int inv_read(const struct spi_dt_spec *spec, uint8_t reg, uint8_t *data, size_t len)
 {
 	int result;
 	unsigned char tx_buffer[2] = { 0, };
@@ -70,7 +70,7 @@ int inv_spi_read(const struct spi_dt_spec *bus, uint8_t reg, uint8_t *data, size
 		.count = 2,
 	};
 
-	result = spi_transceive_dt(bus, &tx, &rx);
+	result = spi_transceive_dt(spec, &tx, &rx);
 
 	if (result) {
 		return result;

@@ -9,7 +9,11 @@
 
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
+#ifdef CONFIG_ICM42605_SPI
 #include <zephyr/drivers/spi.h>
+#else
+#include <zephyr/drivers/i2c.h>
+#endif
 #include <zephyr/kernel.h>
 #include <zephyr/sys/util.h>
 #include <zephyr/types.h>
@@ -64,7 +68,11 @@ struct icm42605_data {
 };
 
 struct icm42605_config {
-	struct spi_dt_spec spi;
+#ifdef CONFIG_ICM42605_SPI
+	struct spi_dt_spec spec;
+#else
+	struct i2c_dt_spec spec;
+#endif
 	struct gpio_dt_spec gpio_int;
 	uint16_t accel_hz;
 	uint16_t gyro_hz;

@@ -4,9 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define DT_DRV_COMPAT invensense_icm42605
-
+#ifdef CONFIG_ICM42605_SPI
 #include <zephyr/drivers/spi.h>
+#else
+#include <zephyr/drivers/i2c.h>
+#endif
 #include <zephyr/init.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/drivers/sensor.h>
@@ -15,7 +17,11 @@
 #include "icm42605.h"
 #include "icm42605_reg.h"
 #include "icm42605_setup.h"
+#ifdef CONFIG_ICM42605_SPI
 #include "icm42605_spi.h"
+#else
+#include "icm42605_i2c.h"
+#endif
 
 LOG_MODULE_REGISTER(ICM42605, CONFIG_SENSOR_LOG_LEVEL);
 
@@ -129,9 +135,9 @@ int icm42605_tap_fetch(const struct device *dev)
 
 	if (drv_data->tap_en &&
 	    (drv_data->tap_handler || drv_data->double_tap_handler)) {
-		result = inv_spi_read(&cfg->spi, REG_INT_STATUS3, drv_data->fifo_data, 1);
+		result = inv_read(&cfg->spec, REG_INT_STATUS3, drv_data->fifo_data, 1);
 		if (drv_data->fifo_data[0] & BIT_INT_STATUS_TAP_DET) {
-			result = inv_spi_read(&cfg->spi, REG_APEX_DATA4,
+			result = inv_read(&cfg->spec, REG_APEX_DATA4,
 					      drv_data->fifo_data, 1);
 			if (drv_data->fifo_data[0] & APEX_TAP) {
 				if (drv_data->tap_trigger->type ==
@@ -173,12 +179,12 @@ static int icm42605_sample_fetch(const struct device *dev,
 	const struct icm42605_config *cfg = dev->config;
 
 	/* Read INT_STATUS (0x45) and FIFO_COUNTH(0x46), FIFO_COUNTL(0x47) */
-	result = inv_spi_read(&cfg->spi, REG_INT_STATUS, drv_data->fifo_data, 3);
+	result = inv_read(&cfg->spec, REG_INT_STATUS, drv_data->fifo_data, 3);
 
 	if (drv_data->fifo_data[0] & BIT_INT_STATUS_DRDY) {
 		fifo_count = (drv_data->fifo_data[1] << 8)
 			+ (drv_data->fifo_data[2]);
-		result = inv_spi_read(&cfg->spi, REG_FIFO_DATA, drv_data->fifo_data,
+		result = inv_read(&cfg->spec, REG_FIFO_DATA, drv_data->fifo_data,
 				      fifo_count);
 
 		/* FIFO Data structure
@@ -392,10 +398,17 @@ static int icm42605_init(const struct device *dev)
 	struct icm42605_data *drv_data = dev->data;
 	const struct icm42605_config *cfg = dev->config;
 
-	if (!spi_is_ready_dt(&cfg->spi)) {
+#ifdef CONFIG_ICM42605_SPI
+	if (!spi_is_ready_dt(&cfg->spec)) {
 		LOG_ERR("SPI bus is not ready");
 		return -ENODEV;
 	}
+#else
+	if (!i2c_is_ready_dt(&cfg->spec)) {
+		LOG_ERR("I2C bus is not ready");
+		return -ENODEV;
+	}
+#endif
 
 	icm42605_data_init(drv_data, cfg);
 	icm42605_sensor_init(dev);
@@ -425,15 +438,23 @@ static const struct sensor_driver_api icm42605_driver_api = {
 	.attr_get = icm42605_attr_get,
 };
 
+#if defined(CONFIG_ICM42605_SPI)
+#define DT_SPEC_CONFIG(index) \
+	SPI_DT_SPEC_INST_GET(index,                          \
+				    SPI_OP_MODE_MASTER |           \
+				    SPI_MODE_CPOL |                \
+				    SPI_MODE_CPHA |                \
+				    SPI_WORD_SET(8) |              \
+				    SPI_TRANSFER_MSB,              \
+				    0U)
+#else
+#define DT_SPEC_CONFIG(index) \
+	I2C_DT_SPEC_INST_GET(index)
+#endif
+
 #define ICM42605_DEFINE_CONFIG(index)					\
 	static const struct icm42605_config icm42605_cfg_##index = {	\
-		.spi = SPI_DT_SPEC_INST_GET(index,			\
-					    SPI_OP_MODE_MASTER |	\
-					    SPI_MODE_CPOL |		\
-					    SPI_MODE_CPHA |		\
-					    SPI_WORD_SET(8) |		\
-					    SPI_TRANSFER_MSB,		\
-					    0U),			\
+		.spec = DT_SPEC_CONFIG(index),		\
 		.gpio_int = GPIO_DT_SPEC_INST_GET(index, int_gpios),    \
 		.accel_hz = DT_INST_PROP(index, accel_hz),		\
 		.gyro_hz = DT_INST_PROP(index, gyro_hz),		\

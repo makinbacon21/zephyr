@@ -31,7 +31,7 @@
 	pinctrl-names = "default", "sleep";
 	cs-gpios = <&gpio0 22 GPIO_ACTIVE_LOW>;
 	icm42605@0 {
-		compatible = "invensense,icm42605";
+		compatible = "invensense,icm42605-spi";
 		spi-max-frequency = <24000000>;
 		reg = <0>;
 		int-gpios = <&gpio0 18 GPIO_ACTIVE_HIGH>;
