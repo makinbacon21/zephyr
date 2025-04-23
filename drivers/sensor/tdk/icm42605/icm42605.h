@@ -20,6 +20,8 @@
 
 #include "icm42605_reg.h"
 
+#define MSG_SLEEP 0b01
+
 typedef void (*tap_fetch_t)(const struct device *dev);
 int icm42605_tap_fetch(const struct device *dev);
 
@@ -45,6 +47,7 @@ struct icm42605_data {
 	bool accel_en;
 	bool gyro_en;
 	bool tap_en;
+	bool raise_en;
 
 	bool sensor_started;
 

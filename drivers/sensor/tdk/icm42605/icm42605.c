@@ -315,6 +315,43 @@ static int icm42605_attr_set(const struct device *dev,
 			return -EINVAL;
 		}
 		break;
+	case SENSOR_CHAN_ALL:
+		if (attr == SENSOR_ATTR_ALERT /* message handler */) {
+			switch (val->val1) {
+				case MSG_SLEEP:
+					icm42605_set_odr(dev, 25, 0);
+					/**
+					 * Set Accel to Low Power mode (Register 0x4Eh in Bank 0)
+					 * ACCEL_MODE = 2 and (Register 0x4Dh in Bank 0), ACCEL_LP_CLK_SEL = 0, for low power mode
+
+					 * Set DMP ODR (Register 0x56h in Bank 0)
+					 * DMP_ODR = 0 for 25 Hz, 2 for 50 Hz
+
+					 * Wait 1 millisecond
+
+						 1. Set DMP_MEM_RESET_EN to 1 (Register 0x4Bh in Bank 0)
+						2. Wait 1 millisecond
+						3. Set SLEEP_TIME_OUT (Register 0x43h in Bank 4) if default value does not meet needs
+						4. Wait 1 millisecond
+						5. Set MOUNTING_MATRIX (Register 0x44h in Bank 4) if default value does not meet needs
+						6. Wait 1 millisecond
+						7. Set SLEEP_GESTURE_DELAY (Register 0x45h in Bank 4) if default value does not meet needs
+						8. Wait 1 millisecond
+						9. Set DMP_INIT_EN to 1 (Register 0x4Bh in Bank 0)
+						10. Enable Raise to Wake/Sleep, source for INT1 by setting bit 2,1 in register INT_SOURCE6 (Register 0x4Dh in Bank 4)
+						to 1. Or if INT2 is selected for Raise to Wake/Sleep, enable Raise to Wake/Sleep source by setting bit 2,1 in register
+						INT_SOURCE7 (Register 0x4Eh in Bank 4) to 1.
+						11. Wait 50 milliseconds
+						12. Turn on Raise to Wake/Sleep feature by setting R2W_EN to 1 (Register 0x56h in Bank 0)
+
+						1. Read interrupt register (Register 0x38h in Bank 0) for Wake and Sleep event
+					 */
+					break;
+				default:
+					LOG_ERR("Alert msg not support");
+					return -EINVAL;
+			}
+		}
 	default:
 		LOG_ERR("Not support");
 		return -EINVAL;
